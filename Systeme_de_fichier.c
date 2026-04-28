@@ -1,12 +1,16 @@
+/*
+    Projet : Système de fichier simplifié
+    Mathias - MP2I
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-
+/* les tailles maximales qu'on s'autorise */
 #define MAX_NOM 64
 #define MAX_CONTENU 1024
 #define MAX_ENFANTS 32
-
 #define ESPACE_TOTAL 100000
 
 int espace_utilise = 0;
@@ -29,6 +33,7 @@ typedef struct Repertoire {
 
     struct Repertoire *parent;   /* NULL si on est à la racine */
 } Repertoire;
+
 
 
 Repertoire *creer_repertoire(char *nom, Repertoire *parent) {
@@ -167,6 +172,7 @@ void lister_contenu(Repertoire *rep) {
 }
 
 
+
 Repertoire *changer_repertoire(Repertoire *courant, char *nom) {
 
     if (strcmp(nom, "..") == 0) {
@@ -194,6 +200,7 @@ void afficher_espace() {
 }
 
 
+
 void liberer_repertoire(Repertoire *rep) {
     for (int i = 0; i < rep->nb_fichiers; i++)
         free(rep->fichiers[i]);
@@ -205,10 +212,47 @@ void liberer_repertoire(Repertoire *rep) {
 }
 
 
+
+void supprimer_repertoire(Repertoire *courant, char *nom) {
+    int index = -1;
+
+    for (int i = 0; i < courant->nb_enfants; i++) {
+        if (strcmp(courant->enfants[i]->nom, nom) == 0) {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == -1) {
+        printf("Erreur : répertoire '%s' introuvable.\n", nom);
+        return;
+    }
+
+    Repertoire *cible = courant->enfants[index];
+
+    /* on refuse de supprimer un répertoire non vide */
+    if (cible->nb_fichiers > 0 || cible->nb_enfants > 0) {
+        printf("Erreur : le répertoire '%s' n'est pas vide.\n", nom);
+        return;
+    }
+
+    espace_utilise -= sizeof(Repertoire);
+    free(cible);
+
+    /* décaler le tableau enfants d'une case vers la gauche */
+    for (int i = index; i < courant->nb_enfants - 1; i++)
+        courant->enfants[i] = courant->enfants[i + 1];
+    courant->nb_enfants--;
+
+    printf("Répertoire '%s' supprimé.\n", nom);
+}
+
+
 void afficher_aide() {
     printf("\nCommandes :\n");
     printf("  ls                     afficher le contenu du répertoire courant\n");
     printf("  mkdir <nom>            créer un sous-répertoire\n");
+    printf("  rmdir <nom>            supprimer un répertoire vide\n");
     printf("  cd <nom>  ou  cd ..    changer de répertoire\n");
     printf("  touch <nom>            créer un fichier vide\n");
     printf("  write <nom> <contenu>  écrire dans un fichier (le crée si besoin)\n");
@@ -267,6 +311,11 @@ void traiter_commande(Repertoire **courant, char *ligne) {
         char *nom = strtok(NULL, " \t\n");
         if (nom == NULL) { printf("Usage : cat <nom>\n"); return; }
         lire_fichier(*courant, nom);
+
+    } else if (strcmp(cmd, "rmdir") == 0) {
+        char *nom = strtok(NULL, " \t\n");
+        if (nom == NULL) { printf("Usage : rmdir <nom>\n"); return; }
+        supprimer_repertoire(*courant, nom);
 
     } else if (strcmp(cmd, "rm") == 0) {
         char *nom = strtok(NULL, " \t\n");

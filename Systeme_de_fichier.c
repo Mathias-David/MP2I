@@ -1,8 +1,3 @@
-/*
-    Projet : Système de fichier simplifié
-    Mathias - MP2I
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

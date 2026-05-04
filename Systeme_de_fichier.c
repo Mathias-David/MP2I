@@ -334,7 +334,7 @@ int main() {
     Repertoire *racine  = creer_repertoire("root", NULL);
     Repertoire *courant = racine;
 
-    printf("=== Système de Fichier Simplifié ===\n");
+    printf("=== Système de Fichier ===\n");
     printf("Tapez 'help' pour voir les commandes.\n\n");
 
     char ligne[512];
